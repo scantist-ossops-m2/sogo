@@ -264,7 +264,6 @@
         .create(editorElement, vm.config)
         .then(editor => {
           vm.editor = editor;
-          window.editor = editor;
 
           // Add Emoticons
           editor.plugins.get('SpecialCharacters').addItems('Emoji', emojis, { label: 'Emoticons' });
@@ -279,6 +278,8 @@
           vm.editor.model.document.on('pasteState', onEditorChange);
           vm.editor.model.document.on('change:data', onEditorChange);
           vm.editor.model.document.on('paste', onEditorPaste);
+
+          onInstanceReady();
 
           if (content) {
             modelChanged = true
@@ -359,6 +360,17 @@
         // Remove images to avoid ghost image in Firefox; images will be handled by the Image Upload plugin
         event.data.dataValue = html.replace(/<img( [^>]*)?>/gi, '');
       }
+    }
+
+    function onInstanceReady(event) {
+      if (vm.onInstanceReady) {
+        vm.onInstanceReady({
+          '$event': event,
+          '$editor': vm.editor
+        });
+      }
+
+      vm.ngModelCtrl.$render();
     }
 
     function validate(body) {
