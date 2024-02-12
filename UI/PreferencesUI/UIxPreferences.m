@@ -1359,7 +1359,7 @@ static NSArray *reminderValues = nil;
   if (!knownKeys)
     {
       knownKeys = [NSArray arrayWithObjects: @"id", @"name", @"serverName", @"port",
-                           @"smtpServerName", @"smtpPort", @"smtpEncryption",
+                           @"smtpServerName", @"smtpPort", @"smtpEncryption", @"smtpAuth",
                            @"userName", @"password", @"encryption", @"replyTo",
                            @"identities", @"mailboxes", @"forceDefaultIdentity",
                            @"receipts", @"security", @"isNew",
@@ -1624,6 +1624,8 @@ static NSArray *reminderValues = nil;
                           [oldAccount objectForKey: @"name"], [exception reason]];
                   decryptedPassword = @"";
                 }
+                else if(!decryptedPassword)
+                  [self errorWithFormat:@"No exception but decrypted password is empty for account %@",[oldAccount objectForKey: @"name"]];
                 else
                   password = decryptedPassword;
               NS_HANDLER

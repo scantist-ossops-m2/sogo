@@ -1079,6 +1079,8 @@ static const NSString *kEncryptedUserNamePrefix = @"uenc";
                 if(exception)
                   [self errorWithFormat:@"Can't decrypt the password for auxiliary account %@: %@",
                               [account objectForKey: @"name"], [exception reason]];
+                else if(!password)
+                  [self errorWithFormat:@"No exception but decyrpted password is empty for account %@",[account objectForKey: @"name"]];
                 else
                   [account setObject: password forKey: @"password"];
               }
@@ -1294,13 +1296,13 @@ static const NSString *kEncryptedUserNamePrefix = @"uenc";
 }
 
 /* Encryption */
-+ (NSString *) getEncryptedUsernameIfNeeded:(NSString *)username
++ (NSString *) getEncryptedUsernameIfNeeded:(NSString *)username request: (WORequest *)request
 {
   NSException *exception;
   NSString *tmp, *cacheKey;
   SOGoCache *cache;
 
-  if (![[SOGoSystemDefaults sharedSystemDefaults] isURLEncryptionEnabled])
+  if (![[SOGoSystemDefaults sharedSystemDefaults] isURLEncryptionEnabled] || [username isEqualToString: @"anonymous"] || [[request requestHandlerKey] isEqualToString:@"dav"])
     return username;
 
   cache = [SOGoCache sharedCache];
@@ -1329,13 +1331,13 @@ static const NSString *kEncryptedUserNamePrefix = @"uenc";
   }
 }
 
-+ (NSString *) getDecryptedUsernameIfNeeded:(NSString *)username
++ (NSString *) getDecryptedUsernameIfNeeded:(NSString *)username request: (WORequest *)request
 {
   NSException *exception;
   NSString *tmp, *cacheKey;
   SOGoCache *cache;
 
-  if (![[SOGoSystemDefaults sharedSystemDefaults] isURLEncryptionEnabled])
+  if (![[SOGoSystemDefaults sharedSystemDefaults] isURLEncryptionEnabled] || [username isEqualToString: @"anonymous"] || [[request requestHandlerKey] isEqualToString:@"dav"])
     return username;
 
   cache = [SOGoCache sharedCache];

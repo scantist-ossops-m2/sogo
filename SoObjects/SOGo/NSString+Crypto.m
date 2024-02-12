@@ -500,8 +500,17 @@ static const NSString *kAES256GCMError = @"kAES256GCMError";
     if (p_len > 0) {
       // Convert to NSString
       outputData = [NSData dataWithBytes: plaintext length: p_len];
-      if (outputData) {
-        value = [NSString stringWithUTF8String: [outputData bytes]];
+      if (outputData && [outputData length] > 0) {
+        char lastByte;
+        [outputData getBytes:&lastByte range:NSMakeRange([outputData length]-1, 1)];
+        if (lastByte == 0x0) {
+          // string is null terminated
+          value = [NSString stringWithUTF8String: [outputData bytes]];
+        } else {
+          // string is not null terminated
+          value = [[NSString alloc] initWithData:outputData encoding:NSUTF8StringEncoding];
+          [value autorelease];
+        }
       } else {
         *ex = [NSException exceptionWithName: kAES128ECError reason:@"Empty data" userInfo: nil];
       }
@@ -511,7 +520,6 @@ static const NSString *kAES256GCMError = @"kAES256GCMError";
 
     // Clean up
     free(plaintext);
-
     return value;
 
   #else
@@ -653,15 +661,24 @@ static const NSString *kAES256GCMError = @"kAES256GCMError";
 
     int status = 0;
     EVP_DecryptUpdate(ctx, plaintext, &p_len, [data bytes], [data length]);
-    outputData = [NSData dataWithBytes: plaintext length: p_len];
+    outputData = [NSData dataWithBytes: (char *)plaintext length: p_len];
     EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, GMC_TAG_LEN, (void *)[tagData bytes]);
     rv = EVP_DecryptFinal_ex(ctx, plaintext + p_len, &f_len);
     p_len += f_len;
     EVP_CIPHER_CTX_free(ctx);
 
     if (rv > 0) {
-      if (outputData) {
-        value = [NSString stringWithUTF8String: [outputData bytes]];
+      if (outputData && [outputData length] > 0) {
+        char lastByte;
+        [outputData getBytes:&lastByte range:NSMakeRange([outputData length]-1, 1)];
+        if (lastByte == 0x0) {
+          // string is null terminated
+          value = [NSString stringWithUTF8String: [outputData bytes]];
+        } else {
+          // string is not null terminated
+          value = [[NSString alloc] initWithData:outputData encoding:NSUTF8StringEncoding];
+          [value autorelease];
+        }
       } else {
         *ex = [NSException exceptionWithName: kAES256GCMError reason:@"Decryption ok but output empty" userInfo: nil];
       }
@@ -672,7 +689,14 @@ static const NSString *kAES256GCMError = @"kAES256GCMError";
     // Clean up
     free(plaintext);
 
-    return value;
+    if(value)
+      return value;
+    else
+    {
+      *ex = [NSException exceptionWithName: kAES128ECError reason:@"Could decrypt but value is null" userInfo: nil];
+      return nil;
+    }
+
 
   #else
     *ex = [NSException exceptionWithName:kAES256GCMError reason:@"Missing OpenSSL framework" userInfo: nil];
