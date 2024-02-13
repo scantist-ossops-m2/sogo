@@ -255,6 +255,12 @@
           "shouldNotGroupWhenFull": true
         }
       }
+      config.image = {
+        resizeUnit: "px",
+        insert: {
+          type: "inline"
+        }
+      };
       vm.config = config;
     };
 

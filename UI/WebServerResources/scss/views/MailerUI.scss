@@ -320,6 +320,11 @@ md-sidenav {
   }
 }
 
+// For CKEditor
+.image_resized {
+  height: auto!important;
+}
+
 .sg-mail-editor {
   .pseudo-input-container {
     max-height: $baseline-grid * 4 * 6; // about 6 lines
